@@ -53,6 +53,40 @@ Create a **fine-grained** token at
    - **Pull requests** → Read and write (to open PRs and post comments)
 3. Paste the token into the app's sign-in screen.
 
+## Works with any repo
+
+There's nothing to configure per repository. On the sign-in screen, type any
+`owner/repo` you can access (the dropdown autocompletes from your recent repos,
+but you can type any one in) and pick a branch. The only thing that limits which
+repos you can open is your **token's** repository access — to review across many
+repos, grant the fine-grained token access to **All repositories** (or an
+organization's repos), or create a token scoped to just the ones you need.
+
+## GitHub Enterprise
+
+The app talks to the GitHub REST API directly from the browser, so it works
+against a GitHub Enterprise host as well as public github.com. On the sign-in
+screen, expand **"Using GitHub Enterprise?"** and enter your host:
+
+- **Enterprise Server** (self-hosted), e.g. `github.acme.com` — the app uses
+  `https://github.acme.com/api/v3`.
+- **Enterprise Cloud with data residency**, e.g. `your-tenant.ghe.com` — the app
+  uses `https://api.your-tenant.ghe.com`.
+
+Leave the field blank for public github.com. The host is remembered in this
+browser alongside your token.
+
+A few things to check when rolling it out to an org:
+
+- **Reachability & CORS** — the browser must reach the host's API directly. The
+  GitHub API allows cross-origin requests; for Enterprise Server behind a VPN,
+  users need network access to it.
+- **Hosting** — serve the static build somewhere your org can reach (Enterprise
+  Server **Pages**, internal static hosting, or even `npm run preview` locally).
+  See **Deploy** below.
+- **Tokens** — create the PAT on the **same** host you point the app at, with the
+  same Contents + Pull requests write permissions.
+
 ## Develop
 
 ```bash

@@ -1,8 +1,8 @@
 // Thin wrapper around the GitHub REST API using fetch + a fine-grained PAT.
-// No backend: the token lives only in the browser and is sent directly to
-// api.github.com.
+// No backend: the token lives only in the browser and is sent directly to the
+// GitHub API (github.com or a GitHub Enterprise host).
 
-const API_ROOT = "https://api.github.com";
+import { PUBLIC_GITHUB } from "./host";
 
 export class GitHubError extends Error {
   status: number;
@@ -17,14 +17,22 @@ export class GitHubError extends Error {
 }
 
 export class GitHubClient {
-  constructor(private token: string) {}
+  /**
+   * @param token       Fine-grained PAT, sent as a Bearer token.
+   * @param apiBaseUrl  REST API root (no trailing slash). Defaults to public
+   *                    GitHub; pass a GitHub Enterprise root for self-hosted.
+   */
+  constructor(
+    private token: string,
+    private apiBaseUrl: string = PUBLIC_GITHUB.api,
+  ) {}
 
   async request<T = unknown>(
     method: string,
     path: string,
     body?: unknown,
   ): Promise<T> {
-    const res = await fetch(`${API_ROOT}${path}`, {
+    const res = await fetch(`${this.apiBaseUrl}${path}`, {
       method,
       headers: {
         Authorization: `Bearer ${this.token}`,

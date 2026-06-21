@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { GitHubClient } from "../github/client";
 import { getCurrentUser } from "../github/api";
+import { normalizeHostInput, resolveHost } from "../github/host";
 import { useSession } from "../state/session";
 
 export function Login() {
   const { signIn } = useSession();
   const [token, setToken] = useState("");
+  const [host, setHost] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,9 +17,13 @@ export function Login() {
     setBusy(true);
     setError(null);
     try {
-      const client = new GitHubClient(token.trim());
+      const normalizedHost = normalizeHostInput(host);
+      const client = new GitHubClient(
+        token.trim(),
+        resolveHost(normalizedHost).api,
+      );
       const user = await getCurrentUser(client);
-      signIn(token.trim(), user);
+      signIn(token.trim(), user, normalizedHost);
     } catch (err) {
       setError(
         err instanceof Error
@@ -40,7 +46,7 @@ export function Login() {
         </p>
 
         <form onSubmit={submit}>
-          <label htmlFor="token">Fine-grained personal access token</label>
+          <label htmlFor="token">Personal access token</label>
           <input
             id="token"
             type="password"
@@ -49,6 +55,26 @@ export function Login() {
             autoComplete="off"
             onChange={(e) => setToken(e.target.value)}
           />
+
+          <details className="help">
+            <summary>Using GitHub Enterprise?</summary>
+            <label htmlFor="host">Enterprise host</label>
+            <input
+              id="host"
+              type="text"
+              placeholder="github.your-company.com"
+              value={host}
+              autoComplete="off"
+              onChange={(e) => setHost(e.target.value)}
+            />
+            <p className="muted small">
+              Leave blank for public github.com. For GitHub Enterprise Server
+              enter your host (e.g. <code>github.acme.com</code>); for Enterprise
+              Cloud with data residency use <code>your-tenant.ghe.com</code>.
+              The browser must be able to reach that host's API directly.
+            </p>
+          </details>
+
           {error && <p className="error">{error}</p>}
           <button type="submit" disabled={busy || !token.trim()}>
             {busy ? "Checking…" : "Sign in"}
@@ -61,11 +87,11 @@ export function Login() {
             <li>
               Go to{" "}
               <a
-                href="https://github.com/settings/personal-access-tokens/new"
+                href={`${resolveHost(host).web}/settings/tokens`}
                 target="_blank"
                 rel="noreferrer"
               >
-                Settings → Developer settings → Fine-grained tokens
+                Settings → Developer settings → access tokens
               </a>
               .
             </li>

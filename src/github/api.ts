@@ -39,6 +39,48 @@ export async function getDefaultBranch(
   return data.default_branch;
 }
 
+export interface RepoSummary {
+  full_name: string;
+  default_branch: string;
+}
+
+/** Repositories the token can access, most-recently-updated first. */
+export async function listUserRepos(
+  gh: GitHubClient,
+): Promise<RepoSummary[]> {
+  const out: RepoSummary[] = [];
+  for (let page = 1; page <= 5; page++) {
+    const batch = await gh.get<RepoSummary[]>(
+      `/user/repos?per_page=100&sort=updated&page=${page}`,
+    );
+    out.push(
+      ...batch.map((r) => ({
+        full_name: r.full_name,
+        default_branch: r.default_branch,
+      })),
+    );
+    if (batch.length < 100) break;
+  }
+  return out;
+}
+
+/** Branch names for a repo (best-effort; used for autocomplete). */
+export async function listBranches(
+  gh: GitHubClient,
+  owner: string,
+  repo: string,
+): Promise<string[]> {
+  const out: string[] = [];
+  for (let page = 1; page <= 5; page++) {
+    const batch = await gh.get<{ name: string }[]>(
+      `/repos/${owner}/${repo}/branches?per_page=100&page=${page}`,
+    );
+    out.push(...batch.map((b) => b.name));
+    if (batch.length < 100) break;
+  }
+  return out;
+}
+
 /** List every Markdown file on the given branch (recursive git tree). */
 export async function listMarkdownFiles(
   gh: GitHubClient,

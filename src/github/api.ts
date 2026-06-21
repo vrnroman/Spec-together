@@ -211,8 +211,7 @@ export async function ensureReviewPR(
       head: names.head,
       base: names.base,
       body:
-        `Review thread for **\`${path}\`** opened with ` +
-        `[Spec-together](https://github.com/vrnroman/spec-together).\n\n` +
+        `Review thread for **\`${path}\`** opened with **Spec-together**.\n\n` +
         `The file is shown as an addition only so its lines can be commented ` +
         `on — \`${ref.branch}\` is not modified.\n\n${marker}`,
     },
